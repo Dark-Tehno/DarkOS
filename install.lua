@@ -5,7 +5,6 @@ local REPO = "https://raw.githubusercontent.com/Dark-Tehno/DarkOS/main/"
 
 local files = {
     "autorun.lua",
-
     "os/init.lua",
 
     "os/api/theme.lua",
@@ -35,12 +34,11 @@ mkdir("/os/apps")
 mkdir("/os/sitedata")
 
 for _, file in ipairs(files) do
-    io.write("Downloading "..file.." ... ")
+    io.write("Downloading " .. file .. " ... ")
 
-    local ok = shell.execute(
-        "wget",
-        "-fq",
-        REPO .. file,
+    local ok = os.execute(
+        "wget -fq " ..
+        REPO .. file .. " " ..
         "/" .. file
     )
 
