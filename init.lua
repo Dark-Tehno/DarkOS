@@ -126,7 +126,7 @@ local function iconAt(px, py)
   local app = apps[i]
   if app and py >= ICON_Y0 then
     local label = "[" .. app.icon .. "] " .. app.name
-    if px < ICON_X + #label then return app end
+    if px < ICON_X + gui.charCount(label) then return app end
   end
   return nil
 end
@@ -136,7 +136,7 @@ local function drawDesktop()
   local apps = appapi.list()
   for i, app in ipairs(apps) do
     local label = "[" .. app.icon .. "] " .. app.name
-    gui.text(ICON_X, ICON_Y0 + i - 1, label, 0xFFFFFF, config.wallpaper)
+    gui.text(ICON_X, ICON_Y0 + i - 1, gui.trimText(label, screenW - ICON_X + 1), 0xFFFFFF, config.wallpaper)
   end
 end
 
@@ -145,7 +145,7 @@ local function drawTaskbar()
   gui.rect(1, TASKBAR_Y, screenW, 1, gui.theme.taskbar)
   gui.text(1, TASKBAR_Y, " ПУСК ", gui.theme.taskbarText, gui.theme.accent)
   local clock = os.date("%H:%M:%S")
-  gui.text(screenW - #clock - 8, TASKBAR_Y, clock, gui.theme.taskbarText, gui.theme.taskbar)
+  gui.text(screenW - gui.charCount(clock) - 8, TASKBAR_Y, clock, gui.theme.taskbarText, gui.theme.taskbar)
   gui.text(screenW - 6, TASKBAR_Y, "ВЫХОД", gui.theme.taskbarText, gui.theme.err)
 end
 

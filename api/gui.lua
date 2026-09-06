@@ -18,6 +18,29 @@ local function clamp(v, a, b)
 end
 gui.clamp = clamp
 
+-- Lua считает длину строки в байтах. Для текста на экране нужен размер
+-- в символах, иначе кириллица занимает несколько колонок и обрезается.
+local function charCount(text)
+  local count = 0
+  for _ in tostring(text):gmatch("[\1-\127\194-\244][\128-\191]*") do count = count + 1 end
+  return count
+end
+
+local function trimText(text, width)
+  text = tostring(text or "")
+  if width <= 0 then return "" end
+  local result, count = {}, 0
+  for char in text:gmatch("[\1-\127\194-\244][\128-\191]*") do
+    if count >= width then break end
+    result[#result + 1] = char
+    count = count + 1
+  end
+  return table.concat(result)
+end
+
+gui.charCount = charCount
+gui.trimText = trimText
+
 --------------------------------------------------------------------------
 -- Примитивы рисования
 --------------------------------------------------------------------------
@@ -28,9 +51,12 @@ function gui.rect(x, y, w, h, bg)
 end
 
 function gui.text(x, y, str, fg, bg)
+  local sw, sh = gpu.getResolution()
+  if y < 1 or y > sh or x > sw then return end
+  x = math.max(1, x)
   if bg then gpu.setBackground(bg) end
   if fg then gpu.setForeground(fg) end
-  gpu.set(x, y, str)
+  gpu.set(x, y, trimText(str, sw - x + 1))
 end
 
 function gui.focusInput(widget)
@@ -65,17 +91,17 @@ local Label = setmetatable({}, { __index = Widget })
 Label.__index = Label
 
 function gui.label(x, y, text, fg)
-  local l = setmetatable(Widget.new(x, y, #text, 1), Label)
+  local l = setmetatable(Widget.new(x, y, charCount(text), 1), Label)
   l.text, l.fg = text, fg or theme.windowText
   return l
 end
 
-function Label:setText(t) self.text = t; self.w = #t end
+function Label:setText(t) self.text = tostring(t or ""); self.w = charCount(self.text) end
 
 function Label:draw(win)
   local maxW = win.w - self.x - 1
   local t = self.text
-  if maxW > 0 and #t > maxW then t = t:sub(1, maxW) end
+  if maxW > 0 then t = trimText(t, maxW) else t = "" end
   gui.text(win.x + self.x, win.y + self.y, t, self.fg, win.bg)
 end
 
@@ -96,14 +122,14 @@ end
 function Button:draw(win)
   local ax, ay = win.x + self.x, win.y + self.y
   gui.rect(ax, ay, self.w, self.h, self.bg)
-  local label = self.label
-  if #label > self.w - 2 then label = label:sub(1, self.w - 2) end
-  local tx = ax + math.max(0, math.floor((self.w - #label) / 2))
+  local label = trimText(self.label, self.w - 2)
+  local tx = ax + math.max(0, math.floor((self.w - charCount(label)) / 2))
   local ty = ay + math.floor((self.h - 1) / 2)
   gui.text(tx, ty, label, self.fg, self.bg)
 end
 
 function Button:onTouch(win, x, y, btn)
+  gui._focusedInput = nil
   if self.onClick then self.onClick(win) end
 end
 
@@ -125,9 +151,15 @@ function TextInput:draw(win)
   local focused = gui._focusedInput == self
   gui.rect(ax, ay, self.w, 1, focused and theme.inputBgFoc or theme.inputBg)
   local shown = self.text
-  if #shown > self.w - 1 then shown = shown:sub(#shown - self.w + 2) end
+  if charCount(shown) > self.w - 1 then
+    local chars = {}
+    for char in shown:gmatch("[\1-\127\194-\244][\128-\191]*") do
+      chars[#chars + 1] = char
+    end
+    shown = table.concat(chars, "", #chars - self.w + 2)
+  end
   gui.text(ax, ay, shown, theme.inputText)
-  if focused then gui.text(ax + #shown, ay, "_", theme.accent) end
+  if focused then gui.text(ax + charCount(shown), ay, "_", theme.accent) end
 end
 
 function TextInput:onTouch(win, x, y, btn)
@@ -179,7 +211,7 @@ function TextArea:draw(win)
   for i = 1, self.h do
     local line = self.lines[self.top + i]
     if line then
-      local shown = line:sub(1, self.w)
+      local shown = trimText(line, self.w)
       gui.text(ax, ay + i - 1, shown, theme.areaText, theme.areaBg)
     end
   end
@@ -310,8 +342,7 @@ function Window:draw()
   gui.rect(self.x, self.y, self.w, self.h, self.bg)
   if not self.noTitle then
     gui.rect(self.x, self.y, self.w, 1, self.titleBg)
-    local t = self.title
-    if #t > self.w - 4 then t = t:sub(1, self.w - 4) end
+    local t = trimText(self.title, self.w - 4)
     gui.text(self.x + 1, self.y, t, theme.titleText, self.titleBg)
     if self.closable then
       gui.text(self.x + self.w - 2, self.y, "X", theme.titleText, theme.closeBg)
@@ -369,8 +400,9 @@ function gui.dispatch(name, a1, a2, a3, a4, a5)
     for i = #gui.windows, 1, -1 do
       local w = gui.windows[i]
       if w.dragging then
-        w.x = a2 - w.dragOffX
-        w.y = a3 - w.dragOffY
+        local sw, sh = gpu.getResolution()
+        w.x = clamp(a2 - w.dragOffX, 1, sw - w.w + 1)
+        w.y = clamp(a3 - w.dragOffY, 1, sh - w.h)
         return true
       end
     end
@@ -383,7 +415,10 @@ function gui.dispatch(name, a1, a2, a3, a4, a5)
         local lx, ly = a2 - w.x, a3 - w.y
         for j = #w.widgets, 1, -1 do
           local wd = w.widgets[j]
-          if wd.visible and wd:hit(lx, ly) then wd:onScroll(w, a4) end
+          if wd.visible and wd:hit(lx, ly) then
+            wd:onScroll(w, a4)
+            return true
+          end
         end
         return true
       end
