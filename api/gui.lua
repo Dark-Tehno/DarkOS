@@ -73,7 +73,10 @@ end
 function Label:setText(t) self.text = t; self.w = #t end
 
 function Label:draw(win)
-  gui.text(win.x + self.x, win.y + self.y, self.text, self.fg, win.bg)
+  local maxW = win.w - self.x - 1
+  local t = self.text
+  if maxW > 0 and #t > maxW then t = t:sub(1, maxW) end
+  gui.text(win.x + self.x, win.y + self.y, t, self.fg, win.bg)
 end
 
 --------------------------------------------------------------------------

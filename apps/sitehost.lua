@@ -67,6 +67,7 @@ return {
         handler = nil
         status:setText("Статус: остановлен")
         win.title = "Мой сайт — выключен"
+        ctx.state.siteName = nil
       end
     end
 
@@ -85,6 +86,7 @@ return {
       event.listen("modem_message", handler)
       status:setText("Статус: работает (" .. siteName .. ")")
       win.title = "Мой сайт — " .. siteName
+      ctx.state.siteName = siteName
       addLog("Сайт '" .. siteName .. "' запущен и ждёт запросов.")
     end
 

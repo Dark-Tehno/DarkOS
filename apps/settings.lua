@@ -20,6 +20,12 @@ return {
       end, { bg = c, fg = c }))
     end
 
+    win:add(gui.label(1, 4, "Имя компьютера в сети:", gui.theme.windowText))
+    local nameInput = win:add(gui.input(1, 5, win.w - 12, desktop.getComputerName()))
+    win:add(gui.button(win.w - 10, 5, 9, 1, "Сохранить", function()
+      desktop.setComputerName(nameInput.text)
+    end))
+
     local gpu = component.gpu
     local w, h = gpu.getResolution()
     local info = {
@@ -29,7 +35,7 @@ return {
       "Интернет-карта: " .. (component.isAvailable("internet") and "есть" or "нет"),
       "Аптайм: " .. math.floor(computer.uptime()) .. " сек.",
     }
-    win:add(gui.textarea(1, 5, win.w - 2, win.h - 7, info, false))
+    win:add(gui.textarea(1, 7, win.w - 2, win.h - 9, info, false))
 
     return win
   end

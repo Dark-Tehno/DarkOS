@@ -24,6 +24,7 @@ return {
 
     local function load(target, path)
       status:setText("Загрузка...")
+      status:draw(win)
       local page, err = net.get(target, path or "/")
       if not page then
         status:setText("Ошибка: " .. tostring(err))
@@ -57,6 +58,10 @@ return {
     end))
 
     addr.onEnter = function(text) load(text, "/") end
+
+    if args and args.site and args.site ~= "" then
+      load(args.site, "/")
+    end
 
     return win
   end
