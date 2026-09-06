@@ -72,10 +72,10 @@
    `wget -f https://raw.githubusercontent.com/Dark-Tehno/DarkOS/main/init.lua /os/init.lua` для каждого файла. Это самый
    быстрый способ, но зависит от того, разрешена ли Internet Card на вашем сервере.
 4. **Через установшик(рекомендовано)**
-   wget -f https://raw.githubusercontent.com/Dark-Tehno/DarkOS/main/install.lua /os/install.lua
-   а затем 
-   lua install.lua
-   reboot
+  * wget -f https://raw.githubusercontent.com/Dark-Tehno/DarkOS/main/install.lua install.lua
+  * а затем 
+  * lua install.lua
+  * reboot
 
 ### Автозапуск
 
