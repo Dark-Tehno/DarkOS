@@ -1,22 +1,22 @@
-local shell = require("shell")
 local fs = require("filesystem")
 
 local REPO = "https://raw.githubusercontent.com/Dark-Tehno/DarkOS/main/"
 
 local files = {
-    "autorun.lua",
-    "os/init.lua",
+    { "autorun.lua",        "/autorun.lua" },
 
-    "os/api/theme.lua",
-    "os/api/gui.lua",
-    "os/api/appapi.lua",
-    "os/api/netproto.lua",
+    { "init.lua",            "/os/init.lua" },
 
-    "os/apps/files.lua",
-    "os/apps/editor.lua",
-    "os/apps/netbrowser.lua",
-    "os/apps/sitehost.lua",
-    "os/apps/settings.lua",
+    { "api/theme.lua",      "/os/api/theme.lua" },
+    { "api/gui.lua",        "/os/api/gui.lua" },
+    { "api/appapi.lua",     "/os/api/appapi.lua" },
+    { "api/netproto.lua",   "/os/api/netproto.lua" },
+
+    { "apps/files.lua",     "/os/apps/files.lua" },
+    { "apps/editor.lua",    "/os/apps/editor.lua" },
+    { "apps/netbrowser.lua","/os/apps/netbrowser.lua" },
+    { "apps/sitehost.lua",  "/os/apps/sitehost.lua" },
+    { "apps/settings.lua",  "/os/apps/settings.lua" },
 }
 
 local function mkdir(path)
@@ -33,13 +33,16 @@ mkdir("/os/api")
 mkdir("/os/apps")
 mkdir("/os/sitedata")
 
-for _, file in ipairs(files) do
-    io.write("Downloading " .. file .. " ... ")
+for _, item in ipairs(files) do
+    local source = item[1]
+    local destination = item[2]
+
+    io.write("Downloading " .. source .. " ... ")
 
     local ok = os.execute(
         "wget -fq " ..
-        REPO .. file .. " " ..
-        "/" .. file
+        REPO .. source .. " " ..
+        destination
     )
 
     if ok then
