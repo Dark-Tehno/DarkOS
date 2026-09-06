@@ -16,6 +16,9 @@ local files = {
     { "apps/editor.lua",    "/os/apps/editor.lua" },
     { "apps/netbrowser.lua","/os/apps/netbrowser.lua" },
     { "apps/sitehost.lua",  "/os/apps/sitehost.lua" },
+    { "apps/netdir.lua",    "/os/apps/netdir.lua" },
+    { "apps/updateserver.lua", "/os/apps/updateserver.lua" },
+    { "apps/updater.lua",   "/os/apps/updater.lua" },
     { "apps/settings.lua",  "/os/apps/settings.lua" },
 }
 

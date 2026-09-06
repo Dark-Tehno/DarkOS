@@ -53,11 +53,24 @@ end
 --------------------------------------------------------------------------
 -- Контекст, доступный всем приложениям
 --------------------------------------------------------------------------
-local ctx = { gui = gui, net = net, appapi = appapi, fs = filesystem }
+local ctx = {
+  gui = gui,
+  net = net,
+  appapi = appapi,
+  fs = filesystem,
+  state = { siteName = nil },
+}
 ctx.desktop = {
   setWallpaper = function(color)
     config.wallpaper = color
     saveConfig()
+  end,
+  getComputerName = function()
+    return computer.getLabel() or "computer"
+  end,
+  setComputerName = function(name)
+    name = tostring(name or "")
+    if name ~= "" then computer.setLabel(name) end
   end,
 }
 
